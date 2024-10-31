@@ -58,9 +58,9 @@ const addSprite = (scene, image, transform) => {
   // }
 };
 
-const scaleBackground = (scene) => {
+const scaleBackground = (scene, image) => {
   const { width, height } = scene.scale;
-  const background = scene.add.image(width / 2, height / 2, "Background");
+  const background = scene.add.image(width / 2, height / 2, image);
 
   // Calculate aspect ratios
   const imageAspect = background.width / background.height;
@@ -127,6 +127,92 @@ const addButton = (scene, image, x, y, onClick = () => {}) => {
       });
       onClick();
     });
+  return button;
+};
+const addImage = (scene, image, x, y) => {
+  // Create an image button
+  const imageElement = scene.add
+    .image(x, y, image)
+    .setOrigin(0.5, 0.5)
+    .setInteractive();
+
+  return imageElement;
+};
+
+const addCheckButton = (
+  scene,
+  imageOn,
+  imageOff,
+  defaultVal,
+  x,
+  y,
+  onChangeVal = (val) => {}
+) => {
+  // Create an image button
+  const button = scene.add
+    .image(x, y, defaultVal ? imageOn : imageOff)
+    .setOrigin(0.5, 0.5)
+    .setInteractive();
+  button.setData("checked", defaultVal); // Store checked state
+
+  button
+    .on("pointerover", () => {
+      scene.tweens.add({
+        targets: button,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 100,
+        ease: "Power1",
+      });
+    })
+    .on("pointerout", () => {
+      scene.tweens.add({
+        targets: button,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 100,
+        ease: "Power1",
+      });
+    })
+    .on("pointerdown", () => {
+      scene.tweens.add({
+        targets: button,
+        scaleX: 1.05,
+        scaleY: 1.05,
+        duration: 50,
+        ease: "Power1",
+      });
+
+      const checked = button.getData("checked");
+      button.setData("checked", !checked);
+
+      // Update the appearance based on the checked state
+      if (checked) {
+        button.setTexture(imageOff); // Set to unchecked image
+      } else {
+        button.setTexture(imageOn); // Set to checked image
+      }
+
+      onChangeVal(checked);
+    })
+    .on("pointerup", () => {
+      scene.tweens.add({
+        targets: button,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 100,
+        ease: "Power1",
+      });
+    });
+  return button;
+};
+
+const addText = (scene, text, x, y, font, fill, originX, originY) => {
+  const textItem = scene.add
+    .text(x, y, text, { font, fill, resolution: 2 })
+    .setOrigin(originX, originY)
+    .setInteractive();
+  return textItem;
 };
 
 const addTextButton = (
@@ -142,7 +228,7 @@ const addTextButton = (
 ) => {
   // Create a text button
   const buttonText = scene.add
-    .text(x, y, text, { font, fill })
+    .text(x, y, text, { font, fill, resolution: 2 })
     .setOrigin(originX, originY)
     .setInteractive();
 
@@ -197,13 +283,69 @@ const showInputField = (inputField, x, y, w, h) => {
 };
 
 const blurInputs = () => {
-  const emailInput = document.getElementById('emailInput');
-  const usernameInput = document.getElementById('usernameInput');
-  const passwordInput = document.getElementById('passwordInput');
+  const emailInput = document.getElementById("emailInput");
+  const usernameInput = document.getElementById("usernameInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const confirmInput = document.getElementById("confirmInput");
   emailInput.blur();
   usernameInput.blur();
   passwordInput.blur();
-}
+  confirmInput.blur();
+};
+const emptyInputs = () => {
+  const emailInput = document.getElementById("emailInput");
+  const usernameInput = document.getElementById("usernameInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const confirmInput = document.getElementById("confirmInput");
+  emailInput.value = "";
+  usernameInput.value = "";
+  passwordInput.value = "";
+  confirmInput.value = "";
+};
+
+const hideInputs = () => {
+  const emailInput = document.getElementById("emailInput");
+  const usernameInput = document.getElementById("usernameInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const confirmInput = document.getElementById("confirmInput");
+  emailInput.style.display = "none";
+  usernameInput.style.display = "none";
+  passwordInput.style.display = "none";
+  confirmInput.style.display = "none";
+};
+
+const transitionToNextScene = (scene, nextScene) => {
+  const { width, height } = scene.scale;
+  // Add a black rectangle to cover the screen for the fade effect
+  const fadeOverlay = scene.add
+    .rectangle(width / 2, height / 2, width, height, 0x000000)
+    .setAlpha(0);
+
+  // Fade out current scene
+  scene.tweens.add({
+    targets: fadeOverlay,
+    alpha: 0.5, // Fade to fully opaque
+    duration: 200, // Duration of fade out
+    onComplete: () => {
+      scene.scene.start(nextScene); // Start the next scene after fade out
+    },
+  });
+};
+
+const fadeThisScreen = (scene) => {
+  // Add a black rectangle to cover the screen for the fade-in effect
+  const fadeOverlay = scene.add
+    .rectangle(720, 512, 1440, 1024, 0x000000)
+    .setAlpha(0.5);
+
+  // Fade in from black
+  scene.tweens.add({
+    targets: fadeOverlay,
+    alpha: 0, // Fade to transparent
+    duration: 200, // Duration of fade in
+    onComplete: () => fadeOverlay.destroy(), // Remove overlay after fade
+  });
+};
 
 export {
   scaleBackground,
@@ -213,6 +355,13 @@ export {
   showInputField,
   addTextInput,
   addButton,
+  addCheckButton,
   addTextButton,
-  blurInputs
+  addText,
+  addImage,
+  blurInputs,
+  emptyInputs,
+  hideInputs,
+  transitionToNextScene,
+  fadeThisScreen,
 };
